@@ -122,8 +122,13 @@ class MemoryStore:
 
             if not response.has_tool_calls:
                 logger.warning("Memory consolidation: LLM did not call save_memory, skipping")
+                if archive_all:
+                    # Fallback for `/new`: keep command usable even when model/provider
+                    # does not support tool calls for memory consolidation.
+                    session.last_consolidated = 0
+                    logger.warning("Memory consolidation fallback: proceeding without archival for /new")
+                    return True
                 return False
-
             args = response.tool_calls[0].arguments
             # Some providers return arguments as a JSON string instead of dict
             if isinstance(args, str):
